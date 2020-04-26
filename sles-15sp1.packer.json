@@ -1,0 +1,69 @@
+{
+    "variables": {
+        "password": "packer",
+        "disk_size": "5120"
+    },
+
+    "builders": [
+        {
+            "name": "sles15sp1",
+
+            "type": "qemu",
+            "format": "qcow2",
+            "disk_size": "{{ user `disk_size` }}",
+            "disk_compression": true,
+
+            "iso_url": "https://storage.yandexcloud.net/temp-files/SLE-15-SP1-Installer-DVD-x86_64-GM-DVD1.iso",
+            "iso_checksum": "5787b180a60a8d52bc42ddb8c51884ca4263f5ed47dc10bb72229a49e8b07497",
+            "iso_checksum_type": "sha256",
+
+            "http_directory": "http",
+            "shutdown_command": "shutdown -h now",
+
+            "ssh_username": "root",
+            "ssh_password": "{{ user `password` }}",
+
+            "ssh_wait_timeout": "60m",
+            "use_default_display": true,
+            "machine_type": "q35",
+	    "vnc_bind_address": "0.0.0.0",
+	    "vnc_port_min": 5900,
+	    "vnc_port_max": 5900,
+
+	    "cpus": 2,
+	    "disk_interface": "virtio",
+	    "memory": 2147483648,
+            "boot_wait": "5s",
+            "boot_command": [
+                   "<esc><enter><wait>",
+                   "linux ",
+                   "net.ifnames=0 ",
+                   "netdevice=eth0 ",
+                   "netsetup=dhcp ",
+                   "lang=en_US ",
+                   "textmode=1 ",
+                   "autoyast=http://{{.HTTPIP}}:{{.HTTPPort}}/autoinst.xml ",
+                   "<wait><enter><wait>"
+            ],
+            
+            "qemuargs": [
+                   [ "-parallel", "none" ],
+                   [ "-m", "2048M" ]
+             ]
+            
+
+        }
+    ],
+
+    "provisioners": [
+        {
+            "type": "shell",
+            "execute_command": "{{ .Vars }} bash '{{ .Path }}'",
+            "pause_before": "50s",
+            "scripts": [
+                "scripts/cloud.sh",
+                "scripts/cleanup.sh"
+            ]
+        }
+    ]
+}
